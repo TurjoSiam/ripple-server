@@ -26,7 +26,23 @@ async function run() {
     try {
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
+        const userCollection = client.db("Ripple").collection("users");
 
+
+
+        // user related api
+
+        app.get("/users", async (req, res) => {
+            const cursor = userCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        app.post("/users", async (req, res) => {
+            const users = req.body;
+            const result = await userCollection.insertOne(users);
+            res.send(result);
+        })
 
 
 
