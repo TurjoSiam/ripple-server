@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -27,6 +28,7 @@ async function run() {
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         const userCollection = client.db("Ripple").collection("users");
+        const postCollection = client.db("Ripple").collection("posts");
 
 
 
@@ -39,11 +41,26 @@ async function run() {
         })
 
         app.post("/users", async (req, res) => {
-            const users = req.body;
-            const result = await userCollection.insertOne(users);
+            const newUser = req.body;
+            const result = await userCollection.insertOne(newUser);
             res.send(result);
         })
 
+        // posts related api
+
+        app.get("/posts", async(req, res) => {
+            const search = req.query.search;
+            const regexValue = String(search);
+            let query = {
+                tag: {
+                    $regex: regexValue,
+                    $options: 'i'
+                }
+            };
+            const cursor = postCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result)
+        })
 
 
     } finally {
