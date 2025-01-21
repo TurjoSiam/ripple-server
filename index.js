@@ -57,7 +57,7 @@ async function run() {
                     $options: 'i'
                 }
             };
-            const cursor = postCollection.find(query);
+            const cursor = postCollection.find(query).limit(5);
             const result = await cursor.toArray();
             res.send(result)
         })
