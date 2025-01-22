@@ -48,16 +48,25 @@ async function run() {
 
         // posts related api
 
-        app.get("/posts", async(req, res) => {
+        app.get("/posts", async (req, res) => {
             const search = req.query.search;
+            const sortBy = req.query.sortBy;
             const regexValue = String(search);
+            postCollection.aggregate([
+                {
+                    $addFields: {
+                        voteDifference: { $subtract: ["$upVote", "$downVote"] }
+                    }
+                }
+            ]);
             let query = {
                 tag: {
                     $regex: regexValue,
                     $options: 'i'
                 }
             };
-            const cursor = postCollection.find(query).sort({time: -1}).limit(5);
+            const sortQuery = sortBy === 'popularity' ? { voteDifference: -1 } : { time: -1 };
+            const cursor = postCollection.find(query).sort(sortQuery).limit(5);
             const result = await cursor.toArray();
             res.send(result)
         })
