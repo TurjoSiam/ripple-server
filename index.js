@@ -78,6 +78,18 @@ async function run() {
             res.send(result);
         })
 
+        app.patch("/upvote/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id: new ObjectId(id)};
+            const updateDoc = {
+                $inc: {
+                    upvote: 1
+                }
+            }
+            const result = await postCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
 
     } finally {
     }
