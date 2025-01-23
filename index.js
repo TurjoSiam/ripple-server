@@ -47,6 +47,19 @@ async function run() {
             res.send(result);
         })
 
+        app.patch("/users/:email", async (req, res) => {
+            const newBadge = req.body;
+            const email = req.params.email;
+            const filter = {email: email};
+            const updateDoc = {
+                $set: {
+                    role: newBadge.role
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
         // posts related api
 
         app.get("/posts", async (req, res) => {
