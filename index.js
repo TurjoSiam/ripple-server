@@ -119,6 +119,14 @@ async function run() {
             res.send(result);
         })
 
+        app.get("/posts/email/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const cursor = postCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
         app.patch("/upvote/:id", async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
