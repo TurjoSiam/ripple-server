@@ -30,6 +30,7 @@ async function run() {
         const userCollection = client.db("Ripple").collection("users");
         const postCollection = client.db("Ripple").collection("posts");
         const commentCollection = client.db("Ripple").collection("comments");
+        const tagCollection = client.db("Ripple").collection("tags");
 
 
 
@@ -69,6 +70,12 @@ async function run() {
 
         // posts related api
 
+        app.post("/posts", async (req, res) => {
+            const post = req.body;
+            const result = await postCollection.insertOne(post);
+            res.send(result);
+        })
+
         app.get("/posts", async (req, res) => {
             const search = req.query.search;
             const sortBy = req.query.sortBy;
@@ -101,6 +108,14 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await postCollection.findOne(query);
+            res.send(result);
+        })
+
+        app.get("/post/email/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const cursor = postCollection.find(query).limit(3);
+            const result = await cursor.toArray();
             res.send(result);
         })
 
@@ -140,6 +155,13 @@ async function run() {
             const comment = req.body;
             const result = await commentCollection.insertOne(comment);
             res.send(result);
+        })
+
+        // tag related api
+        app.get("/tags", async (req, res) => {
+            const cursor = tagCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
         })
 
 
