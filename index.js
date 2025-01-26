@@ -76,6 +76,12 @@ async function run() {
             res.send(result);
         })
 
+        app.get("/allposts", async (req, res) => {
+            const cursor = postCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
         app.get("/posts", async (req, res) => {
             const search = req.query.search;
             const sortBy = req.query.sortBy;
@@ -156,6 +162,13 @@ async function run() {
         app.get("/comments", async (req, res) => {
             const cursor = commentCollection.find();
             const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        app.get("/comments/:postId", async (req, res) => {
+            const postId = req.params.postId;
+            const query = {postId: postId};
+            const result = await commentCollection.find(query).toArray();
             res.send(result);
         })
 
