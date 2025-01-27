@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
@@ -32,12 +33,35 @@ async function run() {
         const commentCollection = client.db("Ripple").collection("comments");
         const tagCollection = client.db("Ripple").collection("tags");
         const announcementCollection = client.db("Ripple").collection("announcement");
+        const reportCollection = client.db("Ripple").collection("reports");
 
+
+        // jwt related api
+
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            res.send({ token });
+        });
+
+        const verifyToken = (req, res, next) => {
+            if (!req.headers.authorization) {
+                return res.status(401).send({ message: 'unauthorized access' });
+            }
+            const token = req.headers.authorization.split(' ')[1];
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ message: 'unauthorized access' })
+                }
+                req.decoded = decoded;
+                next();
+            })
+        }
 
 
         // user related api
 
-        app.get("/users", async (req, res) => {
+        app.get("/users", verifyToken, async (req, res) => {
             const search = req.query.search || "";
             const regexValue = String(search);
             let query = {
@@ -52,9 +76,9 @@ async function run() {
         })
 
 
-        app.get("/users/:email", async (req, res) => {
+        app.get("/users/:email", verifyToken, async (req, res) => {
             const email = req.params.email;
-            const query = {email: email};
+            const query = { email: email };
             const result = await userCollection.findOne(query);
             res.send(result);
         })
@@ -65,10 +89,24 @@ async function run() {
             res.send(result);
         })
 
-        app.patch("/users/:email", async (req, res) => {
+        app.patch("/users/update/:email", verifyToken, async (req, res) => {
+            const updatedInfo = req.body;
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: {
+                    name: updatedInfo.name,
+                    photo: updatedInfo.photo
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
+        app.patch("/users/:email", verifyToken, async (req, res) => {
             const newBadge = req.body;
             const email = req.params.email;
-            const filter = {email: email};
+            const filter = { email: email };
             const updateDoc = {
                 $set: {
                     role: newBadge.role
@@ -78,10 +116,10 @@ async function run() {
             res.send(result);
         })
 
-        app.patch("/users/makeadmin/:id", async (req, res) => {
+        app.patch("/users/makeadmin/:id", verifyToken, async (req, res) => {
             const newRole = req.body;
             const id = req.params.id;
-            const filter = {_id: new ObjectId(id)};
+            const filter = { _id: new ObjectId(id) };
             const updateDoc = {
                 $set: {
                     role: newRole.role
@@ -93,7 +131,7 @@ async function run() {
 
         // posts related api
 
-        app.post("/posts", async (req, res) => {
+        app.post("/posts", verifyToken, async (req, res) => {
             const post = req.body;
             const result = await postCollection.insertOne(post);
             res.send(result);
@@ -190,7 +228,7 @@ async function run() {
 
         app.get("/comments/:postId", async (req, res) => {
             const postId = req.params.postId;
-            const query = {postId: postId};
+            const query = { postId: postId };
             const result = await commentCollection.find(query).toArray();
             res.send(result);
         })
@@ -208,14 +246,14 @@ async function run() {
             res.send(result)
         })
 
-        app.post("/tags", async (req, res) => {
+        app.post("/tags", verifyToken, async (req, res) => {
             const newTag = req.body;
             const result = await tagCollection.insertOne(newTag);
             res.send(result);
         })
 
         //announcement related api
-        app.post("/announcements", async (req, res) => {
+        app.post("/announcements", verifyToken, async (req, res) => {
             const newAnnouncement = req.body;
             const result = await announcementCollection.insertOne(newAnnouncement);
             res.send(result);
@@ -223,6 +261,20 @@ async function run() {
 
         app.get("/announcements", async (req, res) => {
             const cursor = announcementCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        // report related api
+
+        app.post("/reports", verifyToken, async (req, res) => {
+            const newReport = req.body;
+            const result = await reportCollection.insertOne(newReport);
+            res.send(result);
+        })
+
+        app.get("/reports", verifyToken, async (req, res) => {
+            const cursor = reportCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
