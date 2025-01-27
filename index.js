@@ -31,6 +31,7 @@ async function run() {
         const postCollection = client.db("Ripple").collection("posts");
         const commentCollection = client.db("Ripple").collection("comments");
         const tagCollection = client.db("Ripple").collection("tags");
+        const announcementCollection = client.db("Ripple").collection("announcement");
 
 
 
@@ -205,6 +206,13 @@ async function run() {
             const cursor = tagCollection.find();
             const result = await cursor.toArray();
             res.send(result)
+        })
+
+        //announcement related api
+        app.post("/announcements", async (req, res) => {
+            const newAnnouncement = req.body;
+            const result = await announcementCollection.insertOne(newAnnouncement);
+            res.send(result);
         })
 
 
