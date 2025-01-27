@@ -208,10 +208,22 @@ async function run() {
             res.send(result)
         })
 
+        app.post("/tags", async (req, res) => {
+            const newTag = req.body;
+            const result = await tagCollection.insertOne(newTag);
+            res.send(result);
+        })
+
         //announcement related api
         app.post("/announcements", async (req, res) => {
             const newAnnouncement = req.body;
             const result = await announcementCollection.insertOne(newAnnouncement);
+            res.send(result);
+        })
+
+        app.get("/announcements", async (req, res) => {
+            const cursor = announcementCollection.find();
+            const result = await cursor.toArray();
             res.send(result);
         })
 
