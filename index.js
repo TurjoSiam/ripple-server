@@ -7,13 +7,22 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://ripple-turjo-siams-projects.vercel.app",
+        "https://ripple-turjosiam.netlify.app"
+    ],
+    credentials: true,
+}));
+
 // middleware
 app.use(cors());
 app.use(express.json());
 
 
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.k0g53.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.k0g53.mongodb.net/Ripple?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -166,6 +175,31 @@ async function run() {
                 },
                 {
                     $limit: 5
+                }
+            ]).toArray();
+            res.send(result);
+        })
+
+        app.get("/postde", async (req, res) => {
+            const search = req.query.search;
+            const sortBy = req.query.sortBy;
+            const regexValue = String(search);
+            const result = await postCollection.aggregate([
+                {
+                    $addFields: {
+                        voteDifference: { $subtract: ["$upvote", "$downvote"] }
+                    }
+                },
+                {
+                    $match: {
+                        tag: {
+                            $regex: regexValue,
+                            $options: 'i'
+                        }
+                    }
+                },
+                {
+                    $sort: sortBy === 'popularity' ? { voteDifference: -1 } : { time: -1 }
                 }
             ]).toArray();
             res.send(result);
